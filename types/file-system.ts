@@ -1,4 +1,4 @@
-export interface FileItem {
+export interface FileType {
   id: string
   name: string
   type: "file" | "folder"
@@ -7,6 +7,8 @@ export interface FileItem {
   createdAt: Date
   modifiedAt: Date
   mimeType?: string
+  storagePath?: string
+  fileData?: ArrayBuffer | string
 }
 
 export interface DragItem {

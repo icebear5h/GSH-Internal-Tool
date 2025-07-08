@@ -10,9 +10,10 @@ import { Send } from "lucide-react"
 interface ChatInputProps {
   onSendMessage: (message: string) => void
   disabled?: boolean
+  placeholder?: string
 }
 
-export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
+export function ChatInput({ onSendMessage, disabled, placeholder = "Type your message..." }: ChatInputProps) {
   const [message, setMessage] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -28,7 +29,7 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
       <Input
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Type your message..."
+        placeholder={placeholder}
         disabled={disabled}
         className="flex-1"
       />

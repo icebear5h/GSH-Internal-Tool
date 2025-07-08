@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import ClientSessionWrapper from "@/components/auth/session-wrapper"
+import { Navbar } from "@/components/navbar/navbar"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -19,6 +20,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ClientSessionWrapper>
+          <Navbar />
           {children}
         </ClientSessionWrapper>
       </body>

@@ -1,135 +1,131 @@
-"use client"
-
-import { useState, useCallback } from "react"
-import type { FileItem } from "@/types/file-system"
+import { useState, useEffect, useCallback } from "react"
+import type { FileType } from "@/types/file-system"
 
 export function useFileSystem() {
-  const [files, setFiles] = useState<FileItem[]>([
-    {
-      id: "root",
-      name: "Root",
-      type: "folder",
-      parentId: null,
-      createdAt: new Date(),
-      modifiedAt: new Date(),
-    },
-    {
-      id: "1",
-      name: "Documents",
-      type: "folder",
-      parentId: "root",
-      createdAt: new Date(),
-      modifiedAt: new Date(),
-    },
-    {
-      id: "2",
-      name: "Images",
-      type: "folder",
-      parentId: "root",
-      createdAt: new Date(),
-      modifiedAt: new Date(),
-    },
-    {
-      id: "3",
-      name: "sample.txt",
-      type: "file",
-      size: 1024,
-      parentId: "1",
-      createdAt: new Date(),
-      modifiedAt: new Date(),
-      mimeType: "text/plain",
-    },
-    {
-      id: "4",
-      name: "photo.jpg",
-      type: "file",
-      size: 2048000,
-      parentId: "2",
-      createdAt: new Date(),
-      modifiedAt: new Date(),
-      mimeType: "image/jpeg",
-    },
-  ])
-
+  const [items, setItems] = useState<FileType[]>([])
   const [currentFolderId, setCurrentFolderId] = useState<string>("root")
+  const [loading, setLoading] = useState(false)
 
-  const getCurrentFolderItems = useCallback(() => {
-    return files.filter((file) => file.parentId === currentFolderId)
-  }, [files, currentFolderId])
+  // 1. fetch whenever currentFolderId changes
+  useEffect(() => {
+    async function fetchFiles() {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/contents?parentId=${currentFolderId}`);
+        const { items } = await response.json();
+        setItems(items);
+      } catch (error) {
+        console.error('Error fetching files:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchFiles();
+  }, [currentFolderId]);
+
+  // 2. create a folder
+  const createFolder = useCallback(async (name: string) => {
+    try {
+      const response = await fetch("/api/folders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, parentId: currentFolderId }),
+      });
+      const { folder } = await response.json();
+      setItems(f => [...f, folder]);
+    } catch (error) {
+      console.error('Error creating folder:', error);
+    }
+  }, [currentFolderId]);
+
+  // 3. upload a file
+  const uploadFile = useCallback(async (file: File) => {
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("parentId", currentFolderId);
+      const response = await fetch("/api/files", {
+        method: "POST",
+        body: form,
+      });
+      const { document } = await response.json();
+      setItems(f => [...f, document]);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  }, [currentFolderId]);
+
+  // 4. move (or rename) an item
+  const moveItem = useCallback(async (id: string, newParentId: string) => {
+    try {
+      const response = await fetch(`/api/files/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ parentId: newParentId }),
+      });
+      const { file: updated } = await response.json();
+      setItems(f => f.map(x => (x.id === id ? updated : x)));
+    } catch (error) {
+      console.error('Error moving item:', error);
+    }
+  }, []);
+
+  // 5. delete an item
+  const deleteItem = useCallback(async (id: string) => {
+    try {
+      await fetch(`/api/files/${id}`, { method: "DELETE" });
+      setItems(f => f.filter(x => x.id !== id));
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
+  }, []);
+
+  // 6. utility
+  const getFileById = useCallback(
+    (id: string) => items.find((f) => f.id === id),
+    [items]
+  )
 
   const getFolderPath = useCallback(
-    (folderId: string): FileItem[] => {
-      const path: FileItem[] = []
-      let currentId = folderId
+    (folderId: string): FileType[] => {
+      const path: FileType[] = []
 
-      while (currentId) {
-        const folder = files.find((f) => f.id === currentId)
-        if (folder) {
-          path.unshift(folder)
-          currentId = folder.parentId || ""
-        } else {
-          break
+      // always start with a Home/root node
+      path.push({
+        id:        "root",
+        name:      "Home",
+        type:      "folder",
+        parentId:  null,
+        createdAt: new Date(),
+        modifiedAt:new Date(),
+      })
+
+      // then walk up from folderId, unless it's "root"
+      if (folderId !== "root") {
+        let currentId: string | null = folderId
+        while (currentId && currentId !== "root") {
+          const node = items.find((f) => f.id === currentId)
+          if (!node) break          // stop if we don't have this folder cached
+          path.push(node)           // append it
+          currentId = node.parentId // go up one level
         }
       }
 
       return path
     },
-    [files],
-  )
-
-  const moveItem = useCallback((itemId: string, newParentId: string) => {
-    setFiles((prev) =>
-      prev.map((file) => (file.id === itemId ? { ...file, parentId: newParentId, modifiedAt: new Date() } : file)),
-    )
-  }, [])
-
-  const createFolder = useCallback((name: string, parentId: string) => {
-    const newFolder: FileItem = {
-      id: Date.now().toString(),
-      name,
-      type: "folder",
-      parentId,
-      createdAt: new Date(),
-      modifiedAt: new Date(),
-    }
-    setFiles((prev) => [...prev, newFolder])
-  }, [])
-
-  const uploadFile = useCallback((file: File, parentId: string) => {
-    const newFile: FileItem = {
-      id: Date.now().toString() + Math.random(),
-      name: file.name,
-      type: "file",
-      size: file.size,
-      parentId,
-      createdAt: new Date(),
-      modifiedAt: new Date(),
-      mimeType: file.type,
-    }
-    setFiles((prev) => [...prev, newFile])
-  }, [])
-
-  const deleteItem = useCallback(
-    (itemId: string) => {
-      const deleteRecursive = (id: string) => {
-        const children = files.filter((f) => f.parentId === id)
-        children.forEach((child) => deleteRecursive(child.id))
-        setFiles((prev) => prev.filter((f) => f.id !== id))
-      }
-      deleteRecursive(itemId)
-    },
-    [files],
+    [items]
   )
 
   return {
-    files,
+    items,
+    loading,
     currentFolderId,
     setCurrentFolderId,
-    getCurrentFolderItems,
-    getFolderPath,
-    moveItem,
     createFolder,
+    getFolderPath,
     uploadFile,
+    moveItem,
     deleteItem,
+    getFileById,
   }
 }

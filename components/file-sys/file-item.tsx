@@ -3,11 +3,11 @@
 import type React from "react"
 
 import { useState } from "react"
-import { MoreHorizontal, Trash2, Edit } from "lucide-react"
+import { MoreHorizontal, Trash2, Edit, Eye, FolderPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { FileIcon } from "./file-icon"
-import type { FileItem as FileItemType, DragItem } from "@/types/file-system"
+import { FileIcon } from "./file-icons"
+import type { FileType as FileItemType, DragItem } from "@/types/file-system"
 import { formatBytes } from "@/lib/utils"
 
 interface FileItemProps {
@@ -15,9 +15,11 @@ interface FileItemProps {
   onDoubleClick: () => void
   onDelete: () => void
   onDragStart: (item: DragItem) => void
+  onView?: () => void
+  onCreateFolder?: () => void
 }
 
-export function FileItem({ item, onDoubleClick, onDelete, onDragStart }: FileItemProps) {
+export function FileItem({ item, onDoubleClick, onDelete, onDragStart, onView, onCreateFolder }: FileItemProps) {
   const [isDragging, setIsDragging] = useState(false)
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -71,6 +73,18 @@ export function FileItem({ item, onDoubleClick, onDelete, onDragStart }: FileIte
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {item.type === "file" && onView && (
+            <DropdownMenuItem onClick={onView}>
+              <Eye className="mr-2 h-4 w-4" />
+              View
+            </DropdownMenuItem>
+          )}
+          {item.type === "folder" && onCreateFolder && (
+            <DropdownMenuItem onClick={onCreateFolder}>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              New Folder
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem>
             <Edit className="mr-2 h-4 w-4" />
             Rename
