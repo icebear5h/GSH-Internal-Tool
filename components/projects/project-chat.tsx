@@ -7,6 +7,8 @@ import { ChatInput } from "@/components/chat/chat-input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Plus, MessageCircle } from "lucide-react"
+import { ConversationList } from "../chat/conversation-list"
+import { ChatSidebar } from "../chat/chat-sidebar"
 
 interface Message {
   id: string
@@ -217,6 +219,7 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
           </Button>
         </div>
       </div>
+      
 
       {/* Messages Area */}
       <ScrollArea className="flex-1 p-4">

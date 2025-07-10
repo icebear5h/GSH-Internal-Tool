@@ -1,4 +1,3 @@
-// PDF debugging utilities
 export const diagnosePDFIssues = async (fileUrl: string) => {
   const issues: string[] = []
 

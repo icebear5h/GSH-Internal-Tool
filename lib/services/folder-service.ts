@@ -1,85 +1,78 @@
+// lib/services/folder-service.ts
 import { prisma } from "@/lib/prisma"
-import type { Document } from "@prisma/client"
+import type { Document, Folder } from "@prisma/client"
 
-export interface CreateFolderParams {
+export interface FileSystemItemBase {
+  id: string
   name: string
-  parentId?: string | null
-  projectId?: string | null
+  parentId: string | null
+  createdAt: Date
+  modifiedAt: Date
 }
 
-export interface GetFolderContentsParams {
-  parentId?: string | null
-  projectId?: string | null
-}
+export type FileSystemItem =
+  | FileSystemItemBase & { type: "folder"; projectId: string | null }
+  | (FileSystemItemBase &
+      Pick<Document, "storagePath" | "mimeType" | "size" | "projectId"> & {
+        type: "file"
+      })
 
 export class FolderService {
-  static async createFolder({ name, parentId, projectId }: CreateFolderParams) {
-    const realParentId = parentId === "root" ? null : parentId
-
-    // Validate project if provided
-    if (projectId) {
-      const project = await prisma.project.findUnique({ where: { id: projectId } })
-      if (!project) {
-        throw new Error("Project not found")
-      }
-    }
-
-    // Validate parent folder belongs to same context
-    if (realParentId) {
-      const parentFolder = await prisma.folder.findUnique({ where: { id: realParentId } })
-      if (!parentFolder) {
-        throw new Error("Parent folder not found")
-      }
-      if (parentFolder.projectId !== (projectId || null)) {
-        throw new Error("Parent folder does not belong to the specified project context")
-      }
-    }
-
-    return await prisma.folder.create({
-      data: {
-        name,
-        parentId: realParentId,
-        projectId: projectId || null,
-      },
-    })
-  }
-
-  static async getFolderContents({ parentId, projectId }: GetFolderContentsParams) {
-    const realParentId = parentId === "root" ? null : parentId
-
-    // Get folders
+  static async getFolderContents(
+    parentId: string | null,
+    projectId: string | null
+  ): Promise<FileSystemItem[]> {
+    const realParentId = parentId && parentId !== "root" ? parentId : null
+    const realProjectId = projectId && projectId !== "root" ? projectId : null
+    console.log("[API] parentId =", parentId, "realParentId =", realParentId);
+    
+    // 1) fetch sub-folders
     const folders = await prisma.folder.findMany({
       where: {
         parentId: realParentId,
-        projectId: projectId || null,
+        projectId: realProjectId,
+      },
+      select: {
+        id: true,
+        name: true,
+        parentId: true,
+        projectId: true,
+        createdAt: true,
+        modifiedAt: true,
       },
     })
 
-    // Get documents
-    let documents: Document[] = []
-    if (realParentId) {
-      documents = await prisma.document.findMany({
-        where: { parentId: realParentId },
-      })
-    } else if (!projectId) {
-      // Root level global documents only
-      documents = await prisma.document.findMany({
-        where: {
-          parentId: null,
-          folder: null,
-        },
-      })
-    }
+    // 2) fetch documents
+    const documents = await prisma.document.findMany({
+      where: {
+        parentId: realParentId,
+        projectId: realProjectId,
+      },
+      select: {
+        id: true,
+        name: true,
+        parentId: true,
+        projectId: true,
+        createdAt: true,
+        modifiedAt: true,
+        storagePath: true,
+        mimeType: true,
+        size: true,
+      },
+    })
 
-    const folderItems = folders.map((f) => ({
-      id: f.id,
-      name: f.name,
-      type: "folder" as const,
-      parentId: f.parentId,
-      createdAt: f.createdAt,
-      modifiedAt: f.modifiedAt,
+    // 3) tag & merge
+    const folderItems: FileSystemItem[] = folders.map((f) => ({
+      ...f,
+      type: "folder",
     }))
 
-    return [...folderItems, ...documents]
+    const fileItems: FileSystemItem[] = documents.map((d) => ({
+      ...d,
+      type: "file",
+    }))
+
+    // 4) return folders first, then files
+    return [...folderItems, ...fileItems]
   }
 }

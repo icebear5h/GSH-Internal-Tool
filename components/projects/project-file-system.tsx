@@ -1,141 +1,172 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Upload, FolderPlus, Home, ChevronRight } from "lucide-react"
-import { FileItem } from "@/components/file-sys/file-item"
-import { DropZone } from "@/components/file-sys/drop-zone"
-import { FileViewer } from "@/components/file-sys/file-viewer"
-import type { FileType } from "@/types/file-system"
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Upload, FolderPlus } from "lucide-react";
+import { FileItem } from "@/components/file-sys/file-item";
+import { DropZone } from "@/components/file-sys/drop-zone";
+import { FileViewer } from "@/components/file-sys/file-viewer";
+import { BreadcrumbNav } from "@/components/file-sys/breadcrumb-nav";
+import type { FileType } from "@/types/file-system";
+import { getFolderPath } from "@/lib/file-system-utils";
 
 interface ProjectFileSystemProps {
-  projectId: string
+  projectId: string;
 }
 
 export function ProjectFileSystem({ projectId }: ProjectFileSystemProps) {
-  const [items, setItems] = useState<FileType[]>([])
-  const [currentFolderId, setCurrentFolderId] = useState<string>("root")
-  const [loading, setLoading] = useState(false)
-  const [newFolderName, setNewFolderName] = useState("")
-  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false)
-  const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
-  const [isFileViewerOpen, setIsFileViewerOpen] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [items, setItems] = useState<FileType[]>([]);
+  const [currentFolderId, setCurrentFolderId] = useState<string>("root");
+  const [loading, setLoading] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+  const [isFileViewerOpen, setIsFileViewerOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentPath, setCurrentPath] = useState<FileType[]>([]);
 
-  // Load items when folder changes
-  useEffect(() => {
-    loadItems()
-  }, [currentFolderId, projectId])
-
-  const loadItems = async () => {
-    setLoading(true)
+  // Load items when folder changes or projectId changes
+  const loadItems = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await fetch(`/api/projects/${projectId}/folders?parentId=${currentFolderId}`)
-      if (response.ok) {
-        const data = await response.json()
-        setItems(data.items)
-      }
+      const response = await fetch(
+        `/api/contents?parentId=${currentFolderId}&projectId=${projectId}`
+      );
+      if (!response.ok) throw new Error("Failed to load items");
+      const { items } = await response.json();
+      setItems(items);
     } catch (error) {
-      console.error("Error loading items:", error)
+      console.error("Error loading items:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  }, [currentFolderId, projectId]);
+
+  useEffect(() => {
+    loadItems();
+  }, [loadItems]);
 
   const createFolder = async () => {
-    if (!newFolderName.trim()) return
+    if (!newFolderName.trim()) return;
 
     try {
-      const response = await fetch(`/api/projects/${projectId}/folders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newFolderName.trim(),
-          parentId: currentFolderId,
-        }),
-      })
+      const response = await fetch(
+        `/api/projects/${projectId}/folders`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: newFolderName.trim(),
+            parentId: currentFolderId,
+          }),
+        }
+      );
 
-      if (response.ok) {
-        const data = await response.json()
-        setItems((prev) => [...prev, data.folder])
-        setNewFolderName("")
-        setIsCreateFolderOpen(false)
-      }
+      if (!response.ok) throw new Error("Failed to create folder");
+
+      const { folder } = await response.json();
+      setItems((prev) => [
+        ...prev,
+        { ...folder, type: "folder" as const },
+      ]);
+      setNewFolderName("");
+      setIsCreateFolderOpen(false);
     } catch (error) {
-      console.error("Error creating folder:", error)
+      console.error("Error creating folder:", error);
     }
-  }
+  };
 
   const uploadFile = async (file: File) => {
     try {
-      const form = new FormData()
-      form.append("file", file)
-      form.append("parentId", currentFolderId)
+      const form = new FormData();
+      form.append("file", file);
+      form.append("parentId", currentFolderId);
 
-      const response = await fetch(`/api/projects/${projectId}/files`, {
-        method: "POST",
-        body: form,
-      })
+      const response = await fetch(
+        `/api/projects/${projectId}/files`,
+        { method: "POST", body: form }
+      );
 
-      if (response.ok) {
-        const data = await response.json()
-        setItems((prev) => [...prev, data.document])
+      if (!response.ok) throw new Error("Upload failed");
+
+      // Clear the file input so the same file can be re-uploaded if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
+
+      // Re-fetch the current folder’s contents
+      await loadItems();
     } catch (error) {
-      console.error("Error uploading file:", error)
+      console.error("Error uploading file:", error);
     }
-  }
+  };
 
   const handleItemDoubleClick = (item: FileType) => {
     if (item.type === "folder") {
-      setCurrentFolderId(item.id)
+      setCurrentFolderId(item.id);
+      setCurrentPath(prev => [...prev, item]);
     } else {
-      setSelectedFileId(item.id)
-      setIsFileViewerOpen(true)
+      setSelectedFileId(item.id);
+      setIsFileViewerOpen(true);
     }
-  }
+  };
 
   const handleFileDrop = (files: FileList) => {
-    Array.from(files).forEach((file) => {
-      uploadFile(file)
-    })
-  }
+    Array.from(files).forEach(uploadFile);
+  };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
+  const handleFileUpload = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = e.target.files;
     if (files) {
-      Array.from(files).forEach((file) => {
-        uploadFile(file)
-      })
+      Array.from(files).forEach(uploadFile);
     }
-  }
+  };
 
-  const selectedFile = selectedFileId ? items.find((item) => item.id === selectedFileId) : null
+  const handleNavigateBreadcrumb = useCallback((folderId: string) => {
+    if (folderId === "root") {
+      setCurrentFolderId("root");
+      setCurrentPath([]);  // ✅ reset path
+      return;
+    }
+  
+    setCurrentPath(prev => {
+      const idx = prev.findIndex(f => f.id === folderId);
+      return idx !== -1 ? prev.slice(0, idx + 1) : prev;
+    });
+  
+    setCurrentFolderId(folderId);
+  }, []);
+
+  const selectedFile = selectedFileId
+    ? items.find((item) => item.id === selectedFileId)
+    : null;
 
   return (
     <div className="flex flex-col h-full">
       {/* Breadcrumb */}
       <div className="p-4 border-b">
-        <nav className="flex items-center space-x-1 text-sm text-muted-foreground">
-          <Button variant="ghost" size="sm" onClick={() => setCurrentFolderId("root")} className="h-8 px-2">
-            <Home className="h-4 w-4" />
-          </Button>
-          {currentFolderId !== "root" && (
-            <>
-              <ChevronRight className="h-4 w-4 mx-1" />
-              <span className="font-medium">Current Folder</span>
-            </>
-          )}
-        </nav>
+        <BreadcrumbNav
+          path={currentPath}
+          onNavigate={handleNavigateBreadcrumb}
+        />
       </div>
 
       {/* Toolbar */}
       <div className="flex gap-2 p-4 border-b">
-        <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
+        <Dialog
+          open={isCreateFolderOpen}
+          onOpenChange={setIsCreateFolderOpen}
+        >
           <DialogTrigger asChild>
             <Button size="sm">
               <FolderPlus className="mr-2 h-4 w-4" />
@@ -150,32 +181,51 @@ export function ProjectFileSystem({ projectId }: ProjectFileSystemProps) {
               <Input
                 placeholder="Folder name"
                 value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && createFolder()}
+                onChange={(e) =>
+                  setNewFolderName(e.target.value)
+                }
+                onKeyDown={(e) =>
+                  e.key === "Enter" && createFolder()
+                }
               />
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsCreateFolderOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setIsCreateFolderOpen(false)
+                  }
+                >
                   Cancel
                 </Button>
-                <Button onClick={createFolder}>Create</Button>
+                <Button onClick={createFolder}>
+                  Create
+                </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
 
-        <Button size="sm" onClick={() => fileInputRef.current?.click()}>
+        <Button
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+        >
           <Upload className="mr-2 h-4 w-4" />
           Upload Files
         </Button>
-
-        <input ref={fileInputRef} type="file" multiple onChange={handleFileUpload} className="hidden" />
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          onChange={handleFileUpload}
+          className="hidden"
+        />
       </div>
 
       {/* File Grid */}
       <div className="flex-1 p-4">
         <DropZone
           onFileDrop={handleFileDrop}
-          onItemDrop={() => {}} // TODO: Implement drag and drop between folders
+          onItemDrop={() => {}}
           className="h-full rounded-lg border-2 border-dashed border-border"
         >
           {loading ? (
@@ -185,8 +235,12 @@ export function ProjectFileSystem({ projectId }: ProjectFileSystemProps) {
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
               <FolderPlus className="h-16 w-16 mb-4" />
-              <p className="text-lg font-medium">This folder is empty</p>
-              <p className="text-sm">Drag and drop files here or create a new folder</p>
+              <p className="text-lg font-medium">
+                This folder is empty
+              </p>
+              <p className="text-sm">
+                Drag and drop files here or create a new folder
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4">
@@ -194,10 +248,19 @@ export function ProjectFileSystem({ projectId }: ProjectFileSystemProps) {
                 <FileItem
                   key={item.id}
                   item={item}
-                  onDoubleClick={() => handleItemDoubleClick(item)}
-                  onDelete={() => {}} // TODO: Implement delete
-                  onDragStart={() => {}} // TODO: Implement drag start
-                  onView={item.type === "file" ? () => setSelectedFileId(item.id) : undefined}
+                  onDoubleClick={() =>
+                    handleItemDoubleClick(item)
+                  }
+                  onDelete={() => {}}
+                  onDragStart={() => {}}
+                  onView={
+                    item.type === "file"
+                      ? () => {
+                          setSelectedFileId(item.id);
+                          setIsFileViewerOpen(true);
+                        }
+                      : undefined
+                  }
                 />
               ))}
             </div>
@@ -208,18 +271,17 @@ export function ProjectFileSystem({ projectId }: ProjectFileSystemProps) {
       {/* File Viewer */}
       {isFileViewerOpen && selectedFile && (
         <FileViewer
+          projectId={projectId}
           fileId={selectedFile.id}
-          fileUrl={selectedFile.storagePath || ""}
           onClose={() => {
-            setIsFileViewerOpen(false)
-            setSelectedFileId(null)
+            setIsFileViewerOpen(false);
+            setSelectedFileId(null);
           }}
-          onDownload={() => {
-            if (!selectedFile) return
-            // TODO: Implement download
+          onDownload={(url) => {
+            window.open(url, "_blank");
           }}
         />
       )}
     </div>
-  )
+  );
 }

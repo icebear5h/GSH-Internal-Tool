@@ -6,10 +6,7 @@ export async function GET(req: NextRequest) {
     const parentId = req.nextUrl.searchParams.get("parentId")
     const projectId = req.nextUrl.searchParams.get("projectId")
 
-    const items = await FolderService.getFolderContents({
-      parentId,
-      projectId,
-    })
+    const items = await FolderService.getFolderContents(parentId, projectId)
 
     return NextResponse.json({ items })
   } catch (error: any) {

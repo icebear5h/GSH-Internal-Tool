@@ -2,14 +2,14 @@ import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { id: projectId } = await params
+    const { projectId } = await params
 
     // Verify project exists
     const project = await prisma.project.findUnique({
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const conversations = await prisma.conversation.findMany({
       where: {
         projectId,
-        userId: session.user.id, // Still filter by user for conversations
+        userId: session.user.id,
       },
       orderBy: { updatedAt: "desc" },
       select: {
@@ -41,14 +41,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { id: projectId } = await params
+    const { projectId } = await params
     const { title } = await req.json()
 
     // Verify project exists

@@ -2,14 +2,14 @@ import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { id: projectId } = await params
+    const { projectId } = await params
     const parentId = req.nextUrl.searchParams.get("parentId")
 
     // Verify project exists
@@ -55,14 +55,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { id: projectId } = await params
+    const { projectId } = await params
     const { name, parentId } = await req.json()
 
     // Verify project exists

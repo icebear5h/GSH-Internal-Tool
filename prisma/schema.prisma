@@ -63,6 +63,21 @@ model Project {
   updatedAt     DateTime       @updatedAt
   folders       Folder[]       @relation("ProjectFolders")
   conversations Conversation[] @relation("ProjectConversations")
+  tasks         Task[]
+  documents     Document[]     @relation("ProjectDocuments") // New relation for documents directly under project
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  completed   Boolean  @default(false)
+  dueDate     DateTime?
+  priority    String   @default("medium") // low, medium, high
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Folder {
@@ -79,16 +94,18 @@ model Folder {
 }
 
 model Document {
-  id             String           @id @default(cuid())
+  id             String                @id @default(cuid())
   name           String
   size           Int?
   mimeType       String?
   storagePath    String
   url            String?
   parentId       String?
-  folder         Folder?          @relation("FolderDocuments", fields: [parentId], references: [id])
-  createdAt      DateTime         @default(now())
-  modifiedAt     DateTime         @updatedAt
+  folder         Folder?               @relation("FolderDocuments", fields: [parentId], references: [id])
+  projectId      String?               // NEW FIELD: Direct link to Project
+  project        Project?              @relation("ProjectDocuments", fields: [projectId], references: [id], onDelete: Cascade) // NEW RELATION
+  createdAt      DateTime              @default(now())
+  modifiedAt     DateTime              @updatedAt
   DocumentChunks DocumentChunks[]
 }
 

@@ -3,19 +3,19 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import crypto from "crypto"
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ conversationId: string }> }) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { id } = await params
+    const { conversationId } = await params
 
     // Verify the conversation belongs to the user
     const conversation = await prisma.conversation.findFirst({
       where: {
-        id,
+        id: conversationId,
         userId: session.user.id,
       },
     })
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const messages = await prisma.message.findMany({
-      where: { conversationId: id },
+      where: { conversationId },
       orderBy: { createdAt: "asc" },
     })
 
@@ -36,20 +36,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ conversationId: string }> }) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { id } = await params
+    const { conversationId } = await params
     const { content, role } = await req.json()
 
     // Verify the conversation belongs to the user
     const conversation = await prisma.conversation.findFirst({
       where: {
-        id,
+        id: conversationId,
         userId: session.user.id,
       },
     })
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const userMessage = await prisma.message.create({
       data: {
         id: crypto.randomUUID(),
-        conversationId: id,
+        conversationId,
         role: "user",
         content,
       },
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const aiMessage = await prisma.message.create({
       data: {
         id: crypto.randomUUID(),
-        conversationId: id,
+        conversationId,
         role: "assistant",
         content: aiResponse,
       },
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Update conversation's updatedAt timestamp
     await prisma.conversation.update({
-      where: { id },
+      where: { id: conversationId },
       data: { updatedAt: new Date() },
     })
 

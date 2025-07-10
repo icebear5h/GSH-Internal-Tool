@@ -5,18 +5,20 @@ import { Button } from "@/components/ui/button"
 import type { FileType } from "@/types/file-system"
 
 interface BreadcrumbNavProps {
-  /** only folder entries, but we’ll guard just in case */
+  /** Only folders should be in here */
   path: FileType[]
   onNavigate: (folderId: string) => void
 }
 
 export function BreadcrumbNav({ path, onNavigate }: BreadcrumbNavProps) {
-  // drop any non-folder entries
-  const folders = path.filter((node) => node.type === "folder")
+  // Only folders
+  const folders = path.filter((node) => node.type === "folder");
+
+  // If the first folder is root, skip it — we’ll always show our own Home.
+  const rest = folders[0]?.id === "root" ? folders.slice(1) : folders;
 
   return (
     <nav className="flex items-center space-x-1 text-sm text-muted-foreground">
-      {/* Home always goes to root */}
       <Button
         variant="ghost"
         size="sm"
@@ -26,7 +28,7 @@ export function BreadcrumbNav({ path, onNavigate }: BreadcrumbNavProps) {
         <Home className="h-4 w-4" />
       </Button>
 
-      {folders.slice(1).map((folder) => (
+      {rest.map((folder) => (
         <div key={folder.id} className="flex items-center">
           <ChevronRight className="h-4 w-4 mx-1" />
           <Button
@@ -40,5 +42,5 @@ export function BreadcrumbNav({ path, onNavigate }: BreadcrumbNavProps) {
         </div>
       ))}
     </nav>
-  )
+  );
 }
