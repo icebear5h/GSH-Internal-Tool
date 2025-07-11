@@ -32,6 +32,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
       },
     })
 
+    fetch(`http://localhost:8000/embed-task`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        projectId,
+        taskId: task.id,
+      }),
+    })
     return NextResponse.json({ task: updatedTask })
   } catch (error) {
     console.error("Error updating task:", error)

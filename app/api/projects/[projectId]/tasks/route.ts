@@ -65,6 +65,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
       },
     })
 
+    fetch(`http://localhost:8000/embed-task`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        projectId,
+        taskId: task.id,
+      }),
+    })
+
     return NextResponse.json({ task })
   } catch (error) {
     console.error("Error creating task:", error)

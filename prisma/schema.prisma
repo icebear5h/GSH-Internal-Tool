@@ -71,13 +71,14 @@ model Task {
   id          String   @id @default(cuid())
   title       String
   description String?
-  completed   Boolean  @default(false)
   dueDate     DateTime?
   priority    String   @default("medium") // low, medium, high
   projectId   String
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  status      String   @default("pending") // pending, in_progress, completed
+  embedding  Unsupported("vector")
 }
 
 model Folder {
@@ -112,14 +113,13 @@ model Document {
 model DocumentChunks {
   id         String                @id @default(cuid())
   documentId String
-  chunkIndex Int // 0-based index of the chunk in the document
-  text       String                @db.Text // the actual content of this chunk
+  content    String                @db.Text // the actual content of this chunk
   embedding  Unsupported("vector")
   createdAt  DateTime              @default(now())
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
-  @@index([documentId, chunkIndex])
+  @@index([documentId])
 }
 
 model Conversation {

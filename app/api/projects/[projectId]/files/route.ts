@@ -60,6 +60,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
       },
     })
 
+    await fetch("http://localhost:8000/embed-file", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ project_id: projectId, bucket: "documents", key: storagePath, fileType: file.type }),
+    });
+
     return NextResponse.json({ document }, { status: 201 })
   } catch (err: any) {
     console.error("Upload error:", err)

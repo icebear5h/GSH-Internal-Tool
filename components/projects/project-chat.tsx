@@ -196,11 +196,11 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
     if (!conversationId) {
       try {
         setIsLoadingConversations(true) // Indicate creating new conversation
-        const response = await fetch(`/api/projects/${projectId}/conversations`, {
+        const response = await fetch(`/api/projects/${projectId}/conversation`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: messageText.length > 30 ? messageText.substring(0, 30) + "..." : messageText,
+            userMessage: messageText,
           }),
         })
 
@@ -241,7 +241,7 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
     setIsGeneratingAIResponse(true) // Set AI typing indicator to true
 
     try {
-      const response = await fetch(`/api/conversations/${conversationId}/messages`, {
+      const response = await fetch(`/api/projects/${projectId}/conversation/${conversationId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: messageText, role: "user" }),
