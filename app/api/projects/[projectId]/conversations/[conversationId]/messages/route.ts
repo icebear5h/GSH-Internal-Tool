@@ -76,7 +76,7 @@ export async function POST(
       },
     })
 
-    const fastapiResponse = await fetch("http://localhost:8000/chat", {
+    const fastapiResponse = await fetch("http://localhost:8000/api/chat", {
       // Replace with your actual FastAPI URL
       method: "POST",
       headers: {

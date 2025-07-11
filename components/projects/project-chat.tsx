@@ -90,7 +90,7 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
   const loadMessages = async (conversationId: string) => {
     try {
       // No AI typing indicator here, just loading messages
-      const response = await fetch(`/api/conversations/${conversationId}/messages`)
+      const response = await fetch(`/api/projects/${projectId}/conversations/${conversationId}/messages`)
       if (response.ok) {
         const data = await response.json()
         setMessages(
@@ -191,12 +191,11 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
 
   const handleSendMessage = async (messageText: string) => {
     let conversationId = currentConversationId
-
     // Create a new conversation if none exists
     if (!conversationId) {
       try {
         setIsLoadingConversations(true) // Indicate creating new conversation
-        const response = await fetch(`/api/projects/${projectId}/conversation`, {
+        const response = await fetch(`/api/projects/${projectId}/conversations`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -239,9 +238,10 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
 
     setMessages((prev) => [...prev, userMessage])
     setIsGeneratingAIResponse(true) // Set AI typing indicator to true
+    console.log("DEBUG", { projectId, conversationId });
 
     try {
-      const response = await fetch(`/api/projects/${projectId}/conversation/${conversationId}/messages`, {
+      const response = await fetch(`/api/projects/${projectId}/conversations/${conversationId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: messageText, role: "user" }),

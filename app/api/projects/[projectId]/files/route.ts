@@ -60,7 +60,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
       },
     })
 
-    await fetch("http://localhost:8000/embed-file", {
+    await fetch("http://localhost:8000/api/embed-file", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ project_id: projectId, bucket: "documents", key: storagePath, fileType: file.type }),
