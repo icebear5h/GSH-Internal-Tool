@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import Callable, Dict, List
 from semantic_text_splitter import TextSplitter
 
-splitter = TextSplitter(max_characters=1000)
+max_characters = 1000
+splitter = TextSplitter(max_characters)
 
 # ──────────────────────────  Common helpers  ────────────────────────────
 
@@ -123,10 +124,13 @@ def get_extractor(fileType: str | None = None) -> Callable[[Path], str]:
   if func is None:
     raise ValueError(f"Unsupported file type: {ext}")
   return func
+from pathlib import Path
 
-def extract_chunks(path: str | Path, fileType: str | None = None) -> str:
-  extractor = get_extractor(fileType)
-  text = extractor(Path(path))
-  return splitter.chunks(text)
-
-
+def extract_chunks(path: str | Path) -> list[str]:
+    path = Path(path)
+    ext  = path.suffix.lower()            # e.g. ".pdf", ".pptx", ".csv", etc.
+    extractor = _EXTRACTOR_MAP.get(ext)
+    if extractor is None:
+        raise ValueError(f"Unsupported file extension: {ext}")
+    text = extractor(path)
+    return splitter.chunks(text)

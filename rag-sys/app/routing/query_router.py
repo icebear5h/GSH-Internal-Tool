@@ -8,10 +8,10 @@ from groq import Groq
 from app.tools.documents import retrieve_docs
 from app.tools.tasks import retrieve_tasks
 from app.tools.messages import retrieve_messages
+from app.routing.groq_client import groq_client
 
 ROUTING_MODEL = "llama-3.1-8b-instant"
 TOOL_MODEL = "llama-3.3-70b-versatile"
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # ---------------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ GATE_PROMPT = (
 )
 
 async def gate(src: str, query: str) -> bool:
-    response = client.chat.completions.create(
+    response = groq_client.chat.completions.create(
         model=ROUTING_MODEL,
         messages=[
             {"role": "user", "content": GATE_PROMPT.format(src=src, vector=query[:10])},
@@ -37,7 +37,7 @@ async def routed_rag_context(
     embedding: List[float],
     project_id: str,
     conversation_id: str,
-) -> List[Dict]:
+) -> str:
     
     # — B. run gates in parallel -----------------------------------------
     sources = ["docs", "tasks", "messages", "web"]
@@ -55,10 +55,11 @@ async def routed_rag_context(
       return []
 
     results_nested = await asyncio.gather(*(fetch(s) for s in to_query))
-    # flatten & label
-    context: List[Dict] = [
-        {**chunk, "source": src}
-        for src, chunks in zip(to_query, results_nested)
-        for chunk in chunks
-    ]
+    
+    context = ""
+    for src, chunks in zip(to_query, results_nested):
+        context += f"### {src}\n"
+        for chunk in chunks:
+            context += f"{chunk}\n"
+
     return context

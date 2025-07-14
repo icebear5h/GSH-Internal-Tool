@@ -1,28 +1,39 @@
-from app.database import get_prisma
+from app.database import supabase, db
+
+
 
 async def get_messages(user_id: str, conversation_id: str):
-    db = await get_prisma()
-    conv = await db.conversation.find_first_or_raise(
-        where={ 'id': conversation_id, 'userId': user_id },
-        include={ 'messages': True }
-    )
-    return [{'role': m.role, 'content': m.content} for m in conv.messages]
+    try:
+        conv = await db.conversation.find_first_or_raise(
+            where={ 'id': conversation_id, 'userId': user_id },
+            include={ 'messages': True }
+        )
+        return [{'role': m.role, 'content': m.content} for m in conv.messages]
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+
 
 async def update_messages(new_msg: dict, conversation_id: str):
-    db = await get_prisma()
-    return await db.conversation.update(
-        where={ 'id': conversation_id },
-        data={ 'messages': { 'create': new_msg }}
-    )
+    try:
+        # wrap your single message in a list:
+        return await db.conversation.update(
+            where={ 'id': conversation_id },
+            data={
+                'messages': {
+                    'create': [ new_msg ]
+                }
+            }
+        )
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
 
-async def retrieve_messages(emb: str, project_id: str, limit: int = 5):
-    db = await get_prisma()
-    rows = await db.query_raw(
-        '''
-        SELECT "content" FROM "messages"
-        WHERE "projectId" = $1
-        ORDER BY "embedding" <-> CAST($2 AS vector) ASC
-        LIMIT $3
-        ''', project_id, str(emb), limit
-    )
-    return [r['content'] for r in rows]
+async def retrieve_messages(embedded_query: str, project_id: str, conversation_id: str, limit: int = 5):
+    data = await supabase.rpc('match_messages', {
+        'query_embedding': embedded_query,
+        'match_threshold': 0.7,
+        'match_count': limit,
+        'project_id': project_id,
+        'conversation_id': conversation_id
+    }).execute()
+    return [r['content'] for r in data]

@@ -10,11 +10,14 @@ from pydantic import BaseModel
 
 from app.dependencies import get_token_header
 from app.config import settings
-from extractor import extract_chunks
+from app.embedding.extractor import extract_chunks
 from nomic import embed
+import uuid
+import logging
+from app.database import supabase, db
 
-from supabase import create_client  # ← server-side Supabase client
-from app.database import get_prisma, close_prisma
+logger = logging.getLogger(__name__)
+
 
 router = APIRouter(
     prefix="/embedding",
@@ -29,7 +32,6 @@ class EmbedFileJob(BaseModel):
     key: str
     fileType: str       
 
-
 @router.post("/embed-file")
 async def embed_uploaded_file(job: EmbedFileJob):
     """
@@ -39,45 +41,58 @@ async def embed_uploaded_file(job: EmbedFileJob):
     """
 
     # 1 ── download bytes from Storage
-    sb = create_client(settings.supabase_url, settings.supabase_service_role)
-    dl = sb.storage.from_(job.bucket).download(job.key)
-    if dl.error:
-        raise HTTPException(404, detail=f"Storage download failed: {dl.error.message}")
-    data: bytes = dl.data
-
+    try:
+        file_bytes = supabase.storage.from_(job.bucket).download(job.key)
+    except Exception as e:
+        raise HTTPException(500, detail=f"Failed to download file from storage: {str(e)}")
+    
     # 2 ── write to tmp file
     suffix = mimetypes.guess_extension(job.fileType) or ""
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp.write(data)
+        tmp.write(file_bytes)
         tmp_path = tmp.name
 
     try:
         # 3 ── extract → embed
-        db = await get_prisma()
+        
         chunks = extract_chunks(tmp_path, job.fileType) 
+        
+        # Process chunks and store in database
         for chunk in chunks:
-            vec = embed.text(
+            # Get embedding
+            embedding_result = embed.text(
                 texts=[chunk],
                 model="nomic-embed-text-v1.5",
                 task_type="search_document",
-            )["embeddings"][0]
+            )
             
+            # Extract the embedding vector
+            vec = embedding_result["embeddings"][0]
+            
+            # Generate UUID using Python's uuid module
+            chunk_id = str(uuid.uuid4())
+            
+            # Store in database
             await db.document_chunk.create({
-                "id": crypto.randomUUID(),
+                "id": chunk_id,
                 "projectId": job.project_id,
                 "documentId": job.key,
                 "content": chunk,
-                "embedding": vec,
+                "embedding": vec,  # Make sure this matches your database schema
             })
-        await close_prisma()
+        
+        await db.disconnect()
 
-        return jsonable_encoder(vec)
+        # Return the last embedding vector (or modify as needed)
+        return jsonable_encoder({"status": "success", "chunks_processed": len(chunks)})
 
     except ValueError as ve:                 # unsupported extension
+        await db.disconnect()
         raise HTTPException(400, detail=str(ve))
 
     except Exception as e:
-        raise HTTPException(500, detail=str(e))
+        await db.disconnect()
+        raise HTTPException(500, detail=f"Processing error: {str(e)}")
 
     finally:
         try:
@@ -95,20 +110,20 @@ task_chunk = """
 
 @router.post("/embed-task")
 async def embed_task(job: EmbedTaskJob):
-    db = await get_prisma()
     task = await db.task.find_first_or_raise(
         where={ 'id': job.task_id, 'projectId': job.project_id },
     )
+    task_content = task_chunk.format(task_title=task.title, task_description=task.description, task_due_date=task.due_date, task_completed=task.completed)
     vec = embed.text(
-        texts=[task_chunk.format(task_title=task.title, task_description=task.description, task_due_date=task.due_date, task_completed=task.completed)],
+        texts=[task_content],
         model="nomic-embed-text-v1.5",
         task_type="search_document",
     )["embeddings"][0]
     try:
         await db.task.update(
             where={ 'id': job.task_id },
-            data={ 'embedding': vec }
+            data={ 'embedding': vec,
+                   'content': task_content }
         )
     except Exception as e:
         raise HTTPException(500, detail=str(e))
-    await close_prisma()
