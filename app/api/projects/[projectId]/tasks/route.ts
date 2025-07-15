@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
 
     const tasks = await prisma.task.findMany({
       where: { projectId },
-      orderBy: [{ completed: "asc" }, { dueDate: "asc" }, { createdAt: "desc" }],
+      orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
     })
 
     return NextResponse.json({ tasks })

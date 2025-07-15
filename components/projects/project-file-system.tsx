@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Upload, FolderPlus } from "lucide-react";
+import { Upload, FolderPlus, Folder } from "lucide-react";
 import { FileItem } from "@/components/file-sys/file-item";
 import { DropZone } from "@/components/file-sys/drop-zone";
 import { FileViewer } from "@/components/file-sys/file-viewer";
@@ -147,6 +147,24 @@ export function ProjectFileSystem({ projectId }: ProjectFileSystemProps) {
     setCurrentFolderId(folderId);
   }, []);
 
+  const handleDelete = async (item: FileType) => {
+    let url;
+    if (item.type === "folder") {
+      url = `/api/projects/${projectId}/folders/${item.id}`;
+    } else {
+      url = `/api/projects/${projectId}/files/${item.id}`;
+    }
+
+    try {
+      const response = await fetch(url, { method: "DELETE" });
+      if (!response.ok) throw new Error("Delete failed");
+      await loadItems();
+    } catch (error) {
+      console.error("Error deleting item:", error);
+    }
+  }
+
+
   const selectedFile = selectedFileId
     ? items.find((item) => item.id === selectedFileId)
     : null;
@@ -251,7 +269,7 @@ export function ProjectFileSystem({ projectId }: ProjectFileSystemProps) {
                   onDoubleClick={() =>
                     handleItemDoubleClick(item)
                   }
-                  onDelete={() => {}}
+                  onDelete={() => handleDelete(item)}
                   onDragStart={() => {}}
                   onView={
                     item.type === "file"

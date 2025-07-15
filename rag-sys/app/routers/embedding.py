@@ -94,7 +94,6 @@ async def embed_uploaded_file(job: EmbedFileJob):
             )
             print(f"[DEBUG] chunk {i} stored")
 
-        await db.disconnect()
         print("[DEBUG] disconnected from database")
 
         return jsonable_encoder({
