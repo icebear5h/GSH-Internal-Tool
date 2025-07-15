@@ -31,20 +31,6 @@ export function Navbar() {
               <Briefcase className="w-4 h-4" />
               <span>Projects</span>
             </Link>
-            <Link
-              href="/file-system"
-              className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <FolderOpen className="w-4 h-4" />
-              <span>Files</span>
-            </Link>
-            <Link
-              href="/chat"
-              className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>AI Chat</span>
-            </Link>
           </div>
 
           {/* Auth Section */}

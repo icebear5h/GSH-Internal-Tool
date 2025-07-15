@@ -3,6 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase"
 import { prisma } from "@/lib/prisma"
 import crypto from "crypto"
 
+const DEV_TOKEN  = "dev-token";   // must match your get_token_header
+const USER_TOKEN = "user-token";
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   try {
     const { projectId } = await params
@@ -59,11 +62,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
         projectId, // NEW: Link document directly to the project
       },
     })
-
-    await fetch("http://localhost:8000/api/embed-file", {
+    await fetch(`http://localhost:8000/embedding/embed-file?token=${USER_TOKEN}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ project_id: projectId, bucket: "documents", key: storagePath, fileType: file.type }),
+      headers: {
+        "Content-Type": "application/json",
+        "X-Token": DEV_TOKEN,        // header for get_token_header
+      },
+      body: JSON.stringify({ 
+        project_id: projectId, 
+        document_id: document.id,
+        bucket: "documents", 
+        key: storagePath, 
+        fileType: file.type 
+      }),
     });
 
     return NextResponse.json({ document }, { status: 201 })

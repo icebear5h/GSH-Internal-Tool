@@ -28,77 +28,83 @@ router = APIRouter(
 # ---------- request schema -------------------------------------------------
 class EmbedFileJob(BaseModel):
     project_id: str
+    document_id: str
     bucket: str
     key: str
     fileType: str       
 
 @router.post("/embed-file")
 async def embed_uploaded_file(job: EmbedFileJob):
-    """
-    1. Download the object from Supabase Storage.
-    2. Temp-file it for libraries that need a path.
-    3. extract_text ➜ embed ➜ return vector (or store in DB here).
-    """
+    print(f"[DEBUG] embed_uploaded_file called with: bucket={job.bucket}, key={job.key}, fileType={job.fileType}")
 
     # 1 ── download bytes from Storage
     try:
         file_bytes = supabase.storage.from_(job.bucket).download(job.key)
+        print(f"[DEBUG] downloaded {len(file_bytes)} bytes")
     except Exception as e:
-        raise HTTPException(500, detail=f"Failed to download file from storage: {str(e)}")
-    
+        print(f"[ERROR] download failed: {e}")
+        raise HTTPException(500, detail=f"Failed to download file from storage: {e}")
+
     # 2 ── write to tmp file
     suffix = mimetypes.guess_extension(job.fileType) or ""
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp.write(file_bytes)
-        tmp_path = tmp.name
-
     try:
-        # 3 ── extract → embed
-        
-        chunks = extract_chunks(tmp_path, job.fileType) 
-        
-        # Process chunks and store in database
-        for chunk in chunks:
-            # Get embedding
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            tmp.write(file_bytes)
+            tmp_path = tmp.name
+        print(f"[DEBUG] wrote file to temp path: {tmp_path}")
+    except Exception as e:
+        print(f"[ERROR] writing temp file failed: {e}")
+        raise HTTPException(500, detail=f"Failed to write temp file: {e}")
+
+    # 3 ── extract → embed → store
+    try:
+        print(f"[DEBUG] extracting chunks from {tmp_path}")
+        chunks = extract_chunks(tmp_path)
+        print(f"[DEBUG] extracted {len(chunks)} chunks")
+
+        for i, chunk in enumerate(chunks, start=1):
+            print(f"[DEBUG] chunk {i}/{len(chunks)} preview: {chunk[:60]!r}...")
             embedding_result = embed.text(
                 texts=[chunk],
                 model="nomic-embed-text-v1.5",
                 task_type="search_document",
             )
-            
-            # Extract the embedding vector
+            print(f"[DEBUG] embedding_result keys: {list(embedding_result.keys())}")
+
             vec = embedding_result["embeddings"][0]
-            
-            # Generate UUID using Python's uuid module
+            print(f"[DEBUG] vector length: {len(vec)}")
+
             chunk_id = str(uuid.uuid4())
-            
-            # Store in database
-            await db.document_chunk.create({
-                "id": chunk_id,
-                "projectId": job.project_id,
-                "documentId": job.key,
-                "content": chunk,
-                "embedding": vec,  # Make sure this matches your database schema
-            })
-        
-        await db.disconnect()
+            print(f"[DEBUG] storing chunk with id {chunk_id}")
 
-        # Return the last embedding vector (or modify as needed)
-        return jsonable_encoder({"status": "success", "chunks_processed": len(chunks)})
+            #print("[DEBUG] available db models:",
+            #      [attr for attr in dir(db) if not attr.startswith("_")])
+            await db.execute_raw(
+                '''
+                INSERT INTO "DocumentChunks"
+                  (id, "projectId", "documentId", content, embedding)
+                VALUES
+                  ($1, $2, $3, $4, $5::vector)
+                ''',
+                chunk_id,
+                job.project_id,
+                job.document_id,
+                chunk,
+                vec,
+            )
+            print(f"[DEBUG] chunk {i} stored")
 
-    except ValueError as ve:                 # unsupported extension
         await db.disconnect()
-        raise HTTPException(400, detail=str(ve))
+        print("[DEBUG] disconnected from database")
+
+        return jsonable_encoder({
+            "status": "success",
+            "chunks_processed": len(chunks),
+        })
 
     except Exception as e:
-        await db.disconnect()
-        raise HTTPException(500, detail=f"Processing error: {str(e)}")
-
-    finally:
-        try:
-            Path(tmp_path).unlink(missing_ok=True)
-        except Exception:
-            pass
+        print(f"[ERROR] processing or DB storage failed: {e}")
+        raise HTTPException(500, detail=f"Failed during processing or database storage: {e}")
 
 class EmbedTaskJob(BaseModel):
     project_id: str

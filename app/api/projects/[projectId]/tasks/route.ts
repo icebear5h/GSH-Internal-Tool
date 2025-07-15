@@ -65,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
       },
     })
 
-    fetch(`http://localhost:8000/embed-task`, {
+    fetch(`http://localhost:8000/embedding/embed-task`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
