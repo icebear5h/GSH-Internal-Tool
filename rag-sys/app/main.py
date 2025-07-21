@@ -37,3 +37,5 @@ async def shutdown():
 @app.get('/')
 async def root():
     return {'message': 'RAG FastAPI running'}
+
+    

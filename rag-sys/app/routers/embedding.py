@@ -81,7 +81,7 @@ async def embed_uploaded_file(job: EmbedFileJob):
             #      [attr for attr in dir(db) if not attr.startswith("_")])
             await db.execute_raw(
                 '''
-                INSERT INTO "DocumentChunks"
+                INSERT INTO "DocumentChunk"
                   (id, "projectId", "documentId", content, embedding)
                 VALUES
                   ($1, $2, $3, $4, $5::vector)
@@ -93,8 +93,6 @@ async def embed_uploaded_file(job: EmbedFileJob):
                 vec,
             )
             print(f"[DEBUG] chunk {i} stored")
-
-        print("[DEBUG] disconnected from database")
 
         return jsonable_encoder({
             "status": "success",

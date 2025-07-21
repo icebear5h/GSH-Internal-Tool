@@ -14,5 +14,5 @@ settings = SimpleNamespace(
     DATABASE_URL         = os.getenv("DATABASE_URL"),
 )
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 

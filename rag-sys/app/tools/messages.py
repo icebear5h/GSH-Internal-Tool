@@ -28,12 +28,11 @@ async def update_messages(new_msg: dict, conversation_id: str):
     except Exception as e:
         raise HTTPException(500, detail=str(e))
 
-async def retrieve_messages(embedded_query: str, project_id: str, conversation_id: str, limit: int = 5):
-    data = await supabase.rpc('match_messages', {
+async def retrieve_messages(embedded_query: list[float], conversation_id: str, limit: int = 5):
+    res = supabase.rpc('retrieve_messages', {
         'query_embedding': embedded_query,
         'match_threshold': 0.7,
         'match_count': limit,
-        'project_id': project_id,
         'conversation_id': conversation_id
     }).execute()
-    return [r['content'] for r in data]
+    return [r['content'] for r in res.data]

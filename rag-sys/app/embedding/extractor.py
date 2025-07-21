@@ -3,6 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, Dict, List
 from semantic_text_splitter import TextSplitter
+import pandas as pd
+from docling.document_converter import DocumentConverter
+import re
 
 max_characters = 1000
 splitter = TextSplitter(max_characters)
@@ -24,7 +27,7 @@ def _parse_pdf(path: Path) -> str:
   with pdfplumber.open(path) as pdf:
     for i, page in enumerate(pdf.pages, 1):
       txt = page.extract_text() or ""
-      out.append(f"[page {i}]\n{_clean(txt)}")
+      out.append(f"{_clean(txt)}")
     return "\n\n".join(out)
 
 # ──────────────────────────  PowerPoint  ────────────────────────────────
@@ -45,7 +48,7 @@ def _parse_pptx(path: Path) -> str:
       for shape in slide.shapes
       if hasattr(shape, "text") and shape.text.strip()
     ]
-    slides.append(f"[slide {idx}]\n{_clean(' '.join(texts))}")
+    slides.append(f"{_clean(' '.join(texts))}")
   return "\n\n".join(slides)
 
 # ──────────────────────────  Excel / CSV  ───────────────────────────────
@@ -61,9 +64,13 @@ def _parse_excel(path: Path) -> str:
 
   if path.suffix.lower() == ".csv":
     df = pd.read_csv(path)
+    df.dropna(how="all", inplace=True)
     return f"[csv]\n{df.to_markdown(index=False)}"
 
   all_sheets = pd.read_excel(path, sheet_name=None)
+  for df in all_sheets.values():
+    df.replace("", pd.NA, inplace=True)
+    df.dropna(how="all", inplace=True)
   out: List[str] = []
   for name, df in all_sheets.items():
     out.append(f"[sheet {name}]\n{df.to_markdown(index=False)}")
@@ -77,6 +84,34 @@ except ImportError:  # pragma: no cover
   markdown_it = None  # type: ignore
 
 _MD = markdown_it.MarkdownIt("commonmark") if markdown_it else None  # type: ignore
+
+def _parse_docx(path: Path) -> str:
+    # 1. Parse with Docling
+    converter = DocumentConverter()
+    result = converter.convert(str(path))
+
+    # 2. Export to a nested dict
+    doc_dict = result.document.export_to_dict()
+
+    # 3. Recursively extract every "text" field
+    def _collect_text(obj: Any, out: List[str]) -> None:
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if k == "text" and isinstance(v, str):
+                    out.append(v)
+                else:
+                    _collect_text(v, out)
+        elif isinstance(obj, list):
+            for item in obj:
+                _collect_text(item, out)
+
+    pieces: List[str] = []
+    _collect_text(doc_dict, pieces)
+
+    # 4. Join and collapse whitespace
+    full = " ".join(pieces)
+    cleaned = re.sub(r"\s+", " ", full).strip()
+    return cleaned
 
 def _parse_text(path: Path) -> str:
   raw = path.read_text(encoding="utf-8", errors="ignore")
@@ -114,6 +149,7 @@ _EXTRACTOR_MAP: Dict[str, Callable[[Path], str]] = {
     ".jpg":  _parse_image,
     ".jpeg": _parse_image,
     ".tiff": _parse_image,
+    ".docx": _parse_docx,
 }
 
 # ──────────────────────────  Public API  ────────────────────────────────
