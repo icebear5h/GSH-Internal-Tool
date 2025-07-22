@@ -1,4 +1,3 @@
-// lib/services/folder-service.ts
 import { prisma } from "@/lib/prisma"
 import type { Document, Folder } from "@prisma/client"
 

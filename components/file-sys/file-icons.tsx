@@ -139,6 +139,20 @@ export function FileIcon({ type, mimeType, className, showBackground = false, si
     return videoIcon
   }
 
+  // Word files
+  if (mimeType.includes("msword")) {
+    const wordIcon = <DocIcon className={cn(iconSize, "text-blue-600")} />
+
+    if (showBackground) {
+      return (
+        <div className={cn("flex items-center justify-center rounded-lg bg-blue-100", backgroundSizeClasses[size])}>
+          {wordIcon}
+        </div>
+      )
+    }
+    return wordIcon
+  }
+
   // Archive files
   if (mimeType.includes("zip") || mimeType.includes("rar") || mimeType.includes("tar")) {
     const archiveIcon = <Archive className={cn(iconSize, "text-orange-600")} />
@@ -151,6 +165,7 @@ export function FileIcon({ type, mimeType, className, showBackground = false, si
       )
     }
     return archiveIcon
+
   }
 
   // Default fallback
@@ -176,6 +191,18 @@ export function ExcelIcon({ className, size = "md" }: { className?: string; size
     <FileIcon
       type="file"
       mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      className={className}
+      showBackground
+      size={size}
+    />
+  )
+}
+
+export function DocIcon({ className, size = "md" }: { className?: string; size?: "sm" | "md" | "lg" }) {
+  return (
+    <FileIcon
+      type="file"
+      mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
       className={className}
       showBackground
       size={size}
@@ -235,6 +262,10 @@ export function getFileIcon(
       case "txt":
       case "md":
         detectedMimeType = "text/plain"
+        break
+      case "doc":
+      case "docx":
+        detectedMimeType = "application/msword"
         break
     }
   }

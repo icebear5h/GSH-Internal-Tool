@@ -1,9 +1,7 @@
-"use client"
-
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { AuthButton } from "./auth-button"
-import { HardDrive, MessageCircle, FolderOpen, Home, Briefcase } from "lucide-react"
+import { HardDrive, MessageCircle, FolderOpen, Home, Briefcase, Handshake} from "lucide-react"
 
 export function Navbar() {
   return (
@@ -30,6 +28,13 @@ export function Navbar() {
             >
               <Briefcase className="w-4 h-4" />
               <span>Projects</span>
+            </Link>
+            <Link
+              href="/brokers"
+              className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <Handshake className="w-4 h-4" />
+              <span>Brokers</span>
             </Link>
           </div>
 

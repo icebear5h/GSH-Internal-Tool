@@ -17,15 +17,15 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild>
-                <Link href="/file-system" className="flex items-center space-x-2">
+                <Link href="/projects" className="flex items-center space-x-2">
                   <FolderOpen className="w-5 h-5" />
-                  <span>Browse Files</span>
+                  <span>Manage Projects and Deals</span>
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/chat" className="flex items-center space-x-2">
+                <Link href="/brokers" className="flex items-center space-x-2">
                   <MessageCircle className="w-5 h-5" />
-                  <span>Chat with AI</span>
+                  <span>Manage Broker Relations</span>
                 </Link>
               </Button>
             </div>

@@ -19,6 +19,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   conversations Conversation[]
+  BrokerUpdate  BrokerUpdate[]
+  brokers       Broker[] // New: Relation for brokers assigned to this user
 }
 
 model Account {
@@ -68,18 +70,18 @@ model Project {
 }
 
 model Task {
-  id          String   @id @default(cuid())
+  id          String                       @id @default(cuid())
   title       String
   description String?
   dueDate     DateTime?
-  priority    String   @default("medium") // low, medium, high
+  priority    String                       @default("medium") // low, medium, high
   projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  status      String   @default("pending") // pending, in_progress, completed
-  embedding   Unsupported("vector")?
-  content     String? 
+  project     Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+  status      String                       @default("pending") // pending, in_progress, completed
+  embedding   Unsupported("vector (768)")?
+  content     String?
 }
 
 model Folder {
@@ -96,29 +98,29 @@ model Folder {
 }
 
 model Document {
-  id             String                @id @default(cuid())
+  id             String          @id @default(cuid())
   name           String
   size           Int?
   mimeType       String?
   storagePath    String
   url            String?
   parentId       String?
-  folder         Folder?               @relation("FolderDocuments", fields: [parentId], references: [id])
-  projectId      String?               // NEW FIELD: Direct link to Project
-  project        Project?              @relation("ProjectDocuments", fields: [projectId], references: [id], onDelete: Cascade) // NEW RELATION
-  createdAt      DateTime              @default(now())
-  modifiedAt     DateTime              @updatedAt
-  DocumentChunks DocumentChunks[]
+  folder         Folder?         @relation("FolderDocuments", fields: [parentId], references: [id])
+  projectId      String? // NEW FIELD: Direct link to Project
+  project        Project?        @relation("ProjectDocuments", fields: [projectId], references: [id], onDelete: Cascade) // NEW RELATION
+  createdAt      DateTime        @default(now())
+  modifiedAt     DateTime        @updatedAt
+  documentChunks DocumentChunk[]
 }
 
-model DocumentChunks {
-  id         String                @id @default(cuid())
+model DocumentChunk {
+  id         String                       @id @default(cuid())
   documentId String
-  content    String                @db.Text // the actual content of this chunk
-  embedding  Unsupported("vector")?
-  createdAt  DateTime              @default(now())
+  content    String                       @db.Text // the actual content of this chunk
+  embedding  Unsupported("vector (768)")?
+  createdAt  DateTime                     @default(now())
   projectId  String?
-  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document   Document                     @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
 }
@@ -136,11 +138,36 @@ model Conversation {
 }
 
 model Message {
-  id             String       @id
+  id             String                       @id
   conversationId String
   role           String
   content        String
-  embedding      Unsupported("vector")?
-  createdAt      DateTime     @default(now())
-  Conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  embedding      Unsupported("vector (768)")?
+  createdAt      DateTime                     @default(now())
+  Conversation   Conversation                 @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model Broker {
+  id            String         @id @default(cuid())
+  name          String
+  email         String?
+  organization  String?
+  phone         String?
+  location      String?
+  type          String?
+  brokerUpdates BrokerUpdate[]
+  lastFollowUp  DateTime
+  nextFollowUp  DateTime
+  userId        String? // New field for user assignment
+  user          User?          @relation(fields: [userId], references: [id]) // New relation to User
+}
+
+model BrokerUpdate {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  brokerId  String
+  broker    Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }

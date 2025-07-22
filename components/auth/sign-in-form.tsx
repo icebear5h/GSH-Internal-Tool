@@ -1,5 +1,4 @@
 "use client"
-
 import { signIn, getProviders } from "next-auth/react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"

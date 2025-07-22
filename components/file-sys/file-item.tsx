@@ -19,7 +19,7 @@ interface FileItemProps {
   onCreateFolder?: () => void
 }
 
-export function FileItem({ item, onDoubleClick, onDelete, onDragStart, onView, onCreateFolder }: FileItemProps) {
+export function FileItem({ item, onDoubleClick, onDelete, onDragStart, onView }: FileItemProps) {
   const [isDragging, setIsDragging] = useState(false)
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -77,12 +77,6 @@ export function FileItem({ item, onDoubleClick, onDelete, onDragStart, onView, o
             <DropdownMenuItem onClick={onView}>
               <Eye className="mr-2 h-4 w-4" />
               View
-            </DropdownMenuItem>
-          )}
-          {item.type === "folder" && onCreateFolder && (
-            <DropdownMenuItem onClick={onCreateFolder}>
-              <FolderPlus className="mr-2 h-4 w-4" />
-              New Folder
             </DropdownMenuItem>
           )}
           <DropdownMenuItem>

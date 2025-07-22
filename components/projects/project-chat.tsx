@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useRef, useEffect, useCallback } from "react"
 import { ChatMessage } from "@/components/chat/chat-message"
 import { TypingIndicator } from "@/components/chat/typing-indicator"

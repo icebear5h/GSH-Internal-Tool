@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import ClientSessionWrapper from "@/components/auth/session-wrapper"
 import { Navbar } from "@/components/navbar/navbar"
+import "react-day-picker/dist/style.css"
 
 const inter = Inter({ subsets: ["latin"] })
 
