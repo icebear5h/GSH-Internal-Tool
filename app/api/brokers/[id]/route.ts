@@ -48,6 +48,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         name: body.name,
         email: body.email || null,
         phone: body.phone || null,
+        organization: body.organization || null,
         location: body.location || null,
         type: body.type || null,
         lastFollowUp: body.lastFollowUp ? new Date(body.lastFollowUp) : existingBroker.lastFollowUp,

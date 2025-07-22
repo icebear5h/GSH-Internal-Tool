@@ -39,7 +39,7 @@ export default function BrokerList({ sortBy = 'name', sortOrder = 'asc' }: Broke
   const [sortOrderState, setSortOrder] = useState(sortOrder) // New: Sort order state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [brokerToDelete, setBrokerToDelete] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<"card" | "list">("card") // New: View mode state
+  const [viewMode, setViewMode] = useState<"list" | "card">("list") // New: View mode state
   const router = useRouter()
   const { toast } = useToast()
 
@@ -174,15 +174,15 @@ export default function BrokerList({ sortBy = 'name', sortOrder = 'asc' }: Broke
           </Select>
         </div>
         <div className="w-full md:w-32 flex justify-end">
-          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "card" | "list")}>
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "list" | "card")}>
             <TabsList>
-              <TabsTrigger value="card" className="p-2">
-                <LayoutGrid className="h-5 w-5" />
-                <span className="sr-only">Card View</span>
-              </TabsTrigger>
               <TabsTrigger value="list" className="p-2">
                 <List className="h-5 w-5" />
                 <span className="sr-only">List View</span>
+              </TabsTrigger>
+              <TabsTrigger value="card" className="p-2">
+                <LayoutGrid className="h-5 w-5" />
+                <span className="sr-only">Card View</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>

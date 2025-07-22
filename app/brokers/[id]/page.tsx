@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowLeft, Clock, Edit, MapPin, Phone, AtSign, User } from "lucide-react" // Added User icon
+import { ArrowLeft, Clock, Edit, MapPin, Phone, AtSign, User, Building } from "lucide-react" // Added User icon
 import { format } from "date-fns"
 import BrokerUpdateList from "@/components/brokers/broker-update-list"
 import AddUpdateForm from "@/components/brokers/update-form"
@@ -9,7 +9,7 @@ import { BrokerUpdateType } from "@/types/file-system"
 
 
 export default async function BrokerPage({ params }: { params: Promise<{ id: string }> }) {
-  const broker = await fetch(`/api/brokers/${(await params).id}`).then(res => res.json())
+  const broker = await fetch(`${process.env.INTERNAL_URL}/api/brokers/${(await params).id}`).then(res => res.json())
 
   if (!broker) {
     notFound()
@@ -68,9 +68,9 @@ export default async function BrokerPage({ params }: { params: Promise<{ id: str
 
               {broker.organization && (
                 <div className="flex items-center text-muted-foreground">
-                  <AtSign className="h-4 w-4 mr-2" />
-                  <a href={`mailto:${broker.email}`} className="hover:underline">
-                    {broker.email}
+                  <Building className="h-4 w-4 mr-2" />
+                  <a href={`mailto:${broker.organization}`} className="hover:underline">
+                    {broker.organization}
                   </a>
                 </div>
               )}

@@ -6,8 +6,8 @@ import BrokerForm from "@/components/brokers/broker-form"
 import { BrokerType } from "@/types/file-system"
 
 
-export default async function EditBrokerPage({ params }: { params: Promise<{ id: string }> }) {
-  const broker = await fetch(`/api/brokers/${(await params).id}`).then(res => res.json()) 
+export default async function EditBrokerPage({ params }: { params: { id: string } }) {
+  const broker = await fetch(`${process.env.INTERNAL_URL}/api/brokers/${(await params).id}`).then(res => res.json()) 
 
   if (!broker) {
     notFound()
@@ -16,7 +16,7 @@ export default async function EditBrokerPage({ params }: { params: Promise<{ id:
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6">
-        <Link href={`/brokers/${(await params).id}`}>
+        <Link href={`/brokers/${await params.id}`}>
           <Button variant="ghost" className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Broker

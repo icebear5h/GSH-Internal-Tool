@@ -3,7 +3,7 @@ import type { BrokerType } from "@/types/file-system"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Edit, Trash2, MapPin, Phone, AtSign, Clock, User } from "lucide-react" // Added User icon
+import { Edit, Trash2, MapPin, Phone, AtSign, Clock, User, Building} from "lucide-react" // Added User icon
 import { format, formatDistanceToNow } from "date-fns"
 
 interface BrokerCardProps {
@@ -60,6 +60,12 @@ export default function BrokerCard({ broker, onClick, onEdit, onDelete }: Broker
             <div className="flex items-center gap-2">
               <Phone className="h-3.5 w-3.5" />
               <span>{broker.phone}</span>
+            </div>
+          )}
+          {broker.organization && (
+            <div className="flex items-center gap-2">
+              <Building className="h-3.5 w-3.5" />
+              <span className="truncate">{broker.organization}</span>
             </div>
           )}
           {broker.location && (

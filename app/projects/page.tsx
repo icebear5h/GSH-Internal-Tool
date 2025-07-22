@@ -41,7 +41,7 @@ export default function ProjectsPage() {
   const loadProjects = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/projects")
+      const response = await fetch(`${process.env.INTERNAL_URL}/api/projects`)
       if (response.ok) {
         const data = await response.json()
         const formattedProjects = data.projects.map((project: Project) => ({
