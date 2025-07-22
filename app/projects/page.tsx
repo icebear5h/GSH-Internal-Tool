@@ -44,7 +44,7 @@ export default function ProjectsPage() {
       const response = await fetch("/api/projects")
       if (response.ok) {
         const data = await response.json()
-        const formattedProjects = data.projects.map((project: any) => ({
+        const formattedProjects = data.projects.map((project: Project) => ({
           ...project,
           createdAt: new Date(project.createdAt),
           updatedAt: new Date(project.updatedAt),

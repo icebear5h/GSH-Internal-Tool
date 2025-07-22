@@ -37,7 +37,6 @@ export default function BrokerCalendarView() {
     fetchAll()
   }, [toast])
 
-  // 2) Filter for the sidebar
   useEffect(() => {
     if (allBrokers.length) {
       setBrokersForSelectedDate(allBrokers.filter((b) => isSameDay(new Date(b.nextFollowUp), selectedDate)))
@@ -46,7 +45,6 @@ export default function BrokerCalendarView() {
     }
   }, [selectedDate, allBrokers])
 
-  // 3) Build counts map: "YYYY-MM-DD" → number of appts
   const countsByDate = React.useMemo(() => {
     return allBrokers.reduce<Record<string, number>>((map, b) => {
       const key = format(new Date(b.nextFollowUp), "yyyy-MM-dd")
@@ -55,20 +53,7 @@ export default function BrokerCalendarView() {
     }, {})
   }, [allBrokers])
 
-  // 4) Keep your “follow‑up” modifier if you like, but it’s optional now:
-  const modifiers = {
-    today: new Date(),
-    // nextFollowUp: allBrokers.map(b => new Date(b.nextFollowUp)),
-  }
-
-  // 5) Styles for follow‑ups (if still using):
-  const modifiersStyles = {
-    // nextFollowUp: { backgroundColor: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", borderRadius: "0.375rem" },
-  }
-
-  // 2) Create a handler whose signature matches OnSelectHandler<Date|undefined>:
   const handleDaySelect = (date: Date | undefined) => {
-    // You can either ignore `undefined` or reset back to today:
     if (date) {
       setSelectedDate(date)
     }
@@ -89,18 +74,12 @@ export default function BrokerCalendarView() {
             selected={selectedDate}
             onSelect={handleDaySelect}
             required={false}
-            // FULL WIDTH + bigger squares:
-            className="w-full" // stretch to parent width
+            className="w-full"
             classNames={{
-              // month wrapper: outer border only
               months: "w-full border border-gray-200",
-              // weekday header: bottom line under “Su Mo Tu…”
               weekdays: "grid grid-cols-7 text-sm text-gray-500 border-b border-gray-200",
-              // each week row: 7‑col grid, vertical divides, and a top border for the horizontal lines
               week: "grid grid-cols-7 divide-x divide-gray-200 border-t border-gray-200",
-              // day cells
-              day: "flex-1 aspect-square flex flex-col items-center justify-center p-1",
-              // today & selected styling…
+                day: "flex-1 aspect-square flex flex-col items-center justify-center p-1",
               day_today: "ring-2 ring-blue-500",
               day_selected: "bg-black text-white ring-0",
               day_outside: "text-gray-300",
@@ -114,7 +93,6 @@ export default function BrokerCalendarView() {
                     day={day}
                     modifiers={modifiers}
                     {...props}
-                    // Modified className to ensure the button fills the grid cell
                     className="flex flex-col items-center justify-center p-1"
                   >
                     <span className="relative -top-1 font-medium">{children}</span>

@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { MoreHorizontal, Trash2, Edit, Eye, FolderPlus } from "lucide-react"
+import { MoreHorizontal, Trash2, Edit, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { FileIcon } from "./file-icons"

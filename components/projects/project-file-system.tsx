@@ -10,13 +10,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Upload, FolderPlus, Folder } from "lucide-react";
+import { Upload, FolderPlus } from "lucide-react";
 import { FileItem } from "@/components/file-sys/file-item";
 import { DropZone } from "@/components/file-sys/drop-zone";
 import { FileViewer } from "@/components/file-sys/file-viewer";
 import { BreadcrumbNav } from "@/components/file-sys/breadcrumb-nav";
 import type { FileType } from "@/types/file-system";
-import { getFolderPath } from "@/lib/file-system-utils";
 
 interface ProjectFileSystemProps {
   projectId: string;

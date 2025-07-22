@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import type { Document, Folder } from "@prisma/client"
+import type { Document } from "@prisma/client"
 
 export interface FileSystemItemBase {
   id: string

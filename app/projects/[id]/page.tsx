@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -31,15 +31,9 @@ export default function ProjectPage() {
   const projectId = params.id as string
   const [project, setProject] = useState<Project | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [debugInfo, setDebugInfo] = useState<any>(null)
+  const [debugInfo, setDebugInfo] = useState<Record<string, unknown> | null>(null)
 
-  useEffect(() => {
-    if (status === "authenticated" && projectId) {
-      loadProject()
-    }
-  }, [status, projectId])
-
-  const loadProject = async () => {
+  const loadProject = useCallback<() => Promise<void>>(async () => {
     try {
       setIsLoading(true)
       console.log("Loading project with ID:", projectId)
@@ -72,7 +66,13 @@ export default function ProjectPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [projectId])
+
+  useEffect(() => {
+    if (status === "authenticated" && projectId) {
+      loadProject()
+    }
+  }, [status, projectId, loadProject])
 
   if (status === "loading" || isLoading) {
     return (

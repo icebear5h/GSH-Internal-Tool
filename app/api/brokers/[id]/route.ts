@@ -1,16 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-interface Params {
-  params: {
-    id: string
-  }
-}
 
-export async function GET(req: NextRequest, { params }: {params: {id: string}}) {
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const broker = await prisma.broker.findUnique({
-      where: { id: (await params).id },
+      where: { id: (await context.params).id },
       include: {
         brokerUpdates: {
           orderBy: { createdAt: "desc" },
@@ -28,18 +23,18 @@ export async function GET(req: NextRequest, { params }: {params: {id: string}}) 
 
     return NextResponse.json(broker)
   } catch (error) {
-    console.error(`Failed to fetch broker ${params.id}:`, error)
+    console.error(`Failed to fetch broker ${(await context.params).id}:`, error)
     return NextResponse.json({ error: "Failed to fetch broker" }, { status: 500 })
   }
 }
 
-export async function PUT(req: NextRequest, { params }: Params) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const body = await req.json()
 
     // Check if broker exists
     const existingBroker = await prisma.broker.findUnique({
-      where: { id: (await params).id },
+      where: { id: (await context.params).id },
     })
 
     if (!existingBroker) {
@@ -48,7 +43,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
     // Update the broker
     const broker = await prisma.broker.update({
-      where: { id: (await params).id },
+      where: { id: (await context.params).id },
       data: {
         name: body.name,
         email: body.email || null,
@@ -63,16 +58,16 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
     return NextResponse.json(broker)
   } catch (error) {
-    console.error(`Failed to update broker ${params.id}:`, error)
+    console.error(`Failed to update broker ${(await context.params).id}:`, error)
     return NextResponse.json({ error: "Failed to update broker" }, { status: 500 })
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: {params: {id: string}}) {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     // Check if broker exists
     const existingBroker = await prisma.broker.findUnique({
-      where: { id: (await params).id },
+      where: { id: (await context.params).id },
     })
 
     if (!existingBroker) {
@@ -81,12 +76,12 @@ export async function DELETE(req: NextRequest, { params }: {params: {id: string}
 
     // Delete the broker (this will also cascade delete all updates)
     await prisma.broker.delete({
-      where: { id: (await params).id },
+      where: { id: (await context.params).id },
     })
 
     return new NextResponse(null, { status: 204 })
   } catch (error) {
-    console.error(`Failed to delete broker ${params.id}:`, error)
+    console.error(`Failed to delete broker ${(await context.params).id}:`, error)
     return NextResponse.json({ error: "Failed to delete broker" }, { status: 500 })
   }
 }

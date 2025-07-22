@@ -1,45 +1,13 @@
-import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { prisma } from "@/lib/prisma"
 import BrokerForm from "@/components/brokers/broker-form"
 import { BrokerType } from "@/types/file-system"
 
-interface EditBrokerPageProps {
-  params: Promise<{ id: string }>
-}
 
-interface BrokerFormProps {
-  broker?: BrokerType
-}
-
-export async function generateMetadata({ params }: EditBrokerPageProps): Promise<Metadata> {
-  const broker = await prisma.broker.findUnique({
-    where: { id: (await params).id },
-    include: {
-      brokerUpdates: true,
-    },
-  })
-
-  if (!broker) {
-    return {
-      title: "Broker Not Found",
-      description: "The requested broker could not be found",
-    }
-  }
-
-  return {
-    title: `Edit Broker: ${broker.name}`,
-    description: `Edit details for broker ${broker.name}`,
-  }
-}
-
-export default async function EditBrokerPage({ params }: EditBrokerPageProps) {
-  const broker = await prisma.broker.findUnique({
-    where: { id: (await params).id },
-  })
+export default async function EditBrokerPage({ params }: { params: Promise<{ id: string }> }) {
+  const broker = await fetch(`/api/brokers/${(await params).id}`).then(res => res.json()) 
 
   if (!broker) {
     notFound()

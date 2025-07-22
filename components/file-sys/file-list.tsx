@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FileIcon } from "./file-icons"
-import { Download, AlertTriangle, Bug, RefreshCw, Eye, X } from "lucide-react"
+import { Download, AlertTriangle, Bug, RefreshCw, X } from "lucide-react"
 import * as XLSX from 'xlsx'
 
 interface FileViewerProps {
@@ -29,9 +29,6 @@ export function FileViewer({
   const [debugMode, setDebugMode] = useState(false)
   const [isReloading, setIsReloading] = useState(false)
 
-  // Early return if no URL
-  if (!fileUrl) return null
-
   // Handle Escape key to close
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -42,6 +39,9 @@ export function FileViewer({
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
   }, [onClose])
+
+  // Early return if no URL - must be after all hooks
+  if (!fileUrl) return null
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 B"

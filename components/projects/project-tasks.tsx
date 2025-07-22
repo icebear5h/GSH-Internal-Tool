@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   Circle,
   MoreHorizontal,
-  Edit,
   Trash2,
   AlertCircle,
   Flag,
@@ -41,7 +40,6 @@ export function ProjectTasks({ projectId }: ProjectTasksProps) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   // Form state
   const [newTask, setNewTask] = useState({
@@ -51,17 +49,14 @@ export function ProjectTasks({ projectId }: ProjectTasksProps) {
     priority: "medium" as "low" | "medium" | "high",
   })
 
-  useEffect(() => {
-    loadTasks()
-  }, [projectId])
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback<() => Promise<void>>(async () => {
     try {
       setIsLoading(true)
       const response = await fetch(`/api/projects/${projectId}/tasks`)
       if (response.ok) {
         const data = await response.json()
-        const formattedTasks = data.tasks.map((task: any) => ({
+        const formattedTasks = data.tasks.map((task: Task) => ({
           ...task,
           createdAt: new Date(task.createdAt),
           updatedAt: new Date(task.updatedAt),
@@ -74,7 +69,12 @@ export function ProjectTasks({ projectId }: ProjectTasksProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [projectId])
+
+  useEffect(() => {
+    loadTasks()
+  }, [loadTasks])
+
 
   const createTask = async () => {
     if (!newTask.title.trim()) return
@@ -329,11 +329,7 @@ export function ProjectTasks({ projectId }: ProjectTasksProps) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setEditingTask(task)}>
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600" onClick={() => deleteTask(task.id)}>
+                              <DropdownMenuItem onClick={() => deleteTask(task.id)}>
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Delete
                               </DropdownMenuItem>

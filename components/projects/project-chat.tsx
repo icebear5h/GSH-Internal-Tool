@@ -29,7 +29,7 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [isGeneratingAIResponse, setIsGeneratingAIResponse] = useState(false) // New state for AI typing indicator
-  const [isLoadingConversations, setIsLoadingConversations] = useState(true) // For sidebar conversations
+  const [isLoadingConversations, setIsLoadingConversations] = useState(true) // 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -47,7 +47,7 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
       if (response.ok) {
         const data = await response.json()
         const sortedConversations = data.conversations
-          .map((conv: any) => ({
+          .map((conv: Conversation) => ({
             ...conv,
             createdAt: new Date(conv.createdAt),
             updatedAt: new Date(conv.updatedAt),
@@ -76,6 +76,29 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
     loadConversations()
   }, [loadConversations])
 
+  const loadMessages = useCallback(
+    async (conversationId: string) => {
+      try {
+        // No AI typing indicator here, just loading messages
+        const response = await fetch(
+          `/api/projects/${projectId}/conversations/${conversationId}/messages`,
+        )
+        if (response.ok) {
+          const data = await response.json()
+          setMessages(
+            data.messages.map((msg: Message) => ({
+              ...msg,
+              createdAt: new Date(msg.createdAt),
+            })),
+          )
+        }
+      } catch (error) {
+        console.error("Error loading messages:", error)
+      }
+    },
+    [projectId],
+  )
+
   // Load messages when conversation changes
   useEffect(() => {
     if (currentConversationId) {
@@ -83,25 +106,7 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
     } else {
       setMessages([])
     }
-  }, [currentConversationId])
-
-  const loadMessages = async (conversationId: string) => {
-    try {
-      // No AI typing indicator here, just loading messages
-      const response = await fetch(`/api/projects/${projectId}/conversations/${conversationId}/messages`)
-      if (response.ok) {
-        const data = await response.json()
-        setMessages(
-          data.messages.map((msg: any) => ({
-            ...msg,
-            createdAt: new Date(msg.createdAt),
-          })),
-        )
-      }
-    } catch (error) {
-      console.error("Error loading messages:", error)
-    }
-  }
+  }, [currentConversationId, loadMessages])
 
   const handleCreateConversation = async () => {
     try {

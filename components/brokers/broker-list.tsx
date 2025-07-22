@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import type { BrokerType } from "@/types/file-system"
 import { Card, CardContent } from "@/components/ui/card"
@@ -43,24 +43,19 @@ export default function BrokerList({ sortBy = 'name', sortOrder = 'asc' }: Broke
   const router = useRouter()
   const { toast } = useToast()
 
-  useEffect(() => {
-    fetchBrokers()
-  }, [searchQuery, typeFilter, sortByState, sortOrderState]) // Add sortBy and sortOrder to dependencies
-
-  const fetchBrokers = async () => {
+  const fetchBrokers = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
       if (searchQuery) params.append("query", searchQuery)
       if (typeFilter !== "all") params.append("type", typeFilter)
-      params.append("sortBy", sortByState) // New: Add sortBy to params
-      params.append("sortOrder", sortOrderState) // New: Add sortOrder to params
+      params.append("sortBy", sortByState)
+      params.append("sortOrder", sortOrderState)
 
       const res = await fetch(`/api/brokers?${params.toString()}`)
       if (!res.ok) throw new Error("Failed to fetch brokers")
-
       const data = await res.json()
-      setBrokers(data)
+      setBrokers(data.brokers || [])
     } catch (error) {
       console.error("Error fetching brokers:", error)
       toast({
@@ -71,7 +66,11 @@ export default function BrokerList({ sortBy = 'name', sortOrder = 'asc' }: Broke
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchQuery, typeFilter, sortByState, sortOrderState, toast])
+
+  useEffect(() => {
+    fetchBrokers()
+  }, [fetchBrokers])
 
   const handleDelete = async (brokerId: string) => {
     setBrokerToDelete(brokerId)

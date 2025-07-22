@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
     const items = await FolderService.getFolderContents(parentId, projectId)
 
     return NextResponse.json({ items })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 400 });
   }
 }

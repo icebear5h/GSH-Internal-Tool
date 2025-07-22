@@ -16,7 +16,6 @@ export function ChatMessage({
   isUser,
   timestamp,
 }: ChatMessageProps) {
-  // 1) strip out any <think>…</think> blocks
   const visible = message.replace(/<think>[\s\S]*?<\/think>/g, "").trim()
 
   return (
@@ -34,12 +33,11 @@ export function ChatMessage({
             : "bg-gray-100 text-gray-900 border"
         )}
       >
-        {/* 2) render Markdown here */}
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
             // map paragraph tags to your existing text-sm class
-            p: ({ node, children }) => (
+            p: ({ children }) => (
               <p className="text-sm leading-relaxed">{children}</p>
             ),
             // you can customize other elements (h1,h2,ul,li,code...) here too

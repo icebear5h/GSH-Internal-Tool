@@ -9,6 +9,13 @@ import { Download, AlertTriangle, Bug, X, RefreshCw } from "lucide-react"
 import * as XLSX from "xlsx"
 import { diagnosePDFIssues, generateAlternativePDFUrls } from "@/lib/pdf-debug" // Import the debug utilities
 
+interface FileMetadata {
+  name: string
+  size: number
+  mimeType: string
+  lastModified?: string
+}
+
 export interface FileViewerProps {
   /** Unique document identifier to fetch metadata and signed URL */
   fileId: string
@@ -24,7 +31,7 @@ export interface FileViewerProps {
 
 export function FileViewer({ fileId, fileUrl: initialUrl, onClose, onDownload, projectId }: FileViewerProps) {
   const [fileUrl, setFileUrl] = useState<string | undefined>(initialUrl)
-  const [fileMetadata, setFileMetadata] = useState<any>(null) // To store name, size, type etc.
+  const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null)
   const [debugMode, setDebugMode] = useState(false)
   const [isReloading, setIsReloading] = useState(false)
   const [pdfIssues, setPdfIssues] = useState<string[]>([])
@@ -39,7 +46,7 @@ export function FileViewer({ fileId, fileUrl: initialUrl, onClose, onDownload, p
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
         const data = await response.json()
         setFileUrl(data.downloadUrl)
-        setFileMetadata(data.metadata) // Assuming API returns metadata
+        setFileMetadata(data.metadata as FileMetadata)
       } catch (error) {
         console.error("Error fetching file details:", error)
         setFileUrl(undefined)
@@ -53,7 +60,7 @@ export function FileViewer({ fileId, fileUrl: initialUrl, onClose, onDownload, p
       // Fetch if no URL or explicitly reloading
       fetchFileDetails()
     }
-  }, [fileId, fileUrl, isReloading])
+  }, [fileId, fileUrl, isReloading, projectId])
 
   // Diagnose PDF issues when fileUrl is available and it's a PDF
   useEffect(() => {

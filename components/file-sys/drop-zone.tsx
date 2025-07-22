@@ -13,7 +13,6 @@ interface DropZoneProps {
 
 export function DropZone({ onFileDrop, onItemDrop, children, className = "" }: DropZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false)
-  const [draggedItem, setDraggedItem] = useState<DragItem | null>(null)
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()

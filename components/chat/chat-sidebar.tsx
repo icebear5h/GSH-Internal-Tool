@@ -240,7 +240,7 @@ export function ChatSidebar({
   }: {
     title: string
     conversations: Conversation[]
-    icon: any
+    icon: React.ComponentType<{ className?: string }>
   }) => {
     if (conversations.length === 0) return null
 

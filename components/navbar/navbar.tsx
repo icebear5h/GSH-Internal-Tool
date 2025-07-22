@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { AuthButton } from "./auth-button"
-import { HardDrive, MessageCircle, FolderOpen, Home, Briefcase, Handshake} from "lucide-react"
+import { HardDrive, Home, Briefcase, Handshake} from "lucide-react"
 
 export function Navbar() {
   return (

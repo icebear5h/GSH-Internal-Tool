@@ -55,7 +55,6 @@ export async function POST(
 
     const { projectId, conversationId } = await params
     const { content } = await req.json()
-    const role = "user"
     // Verify the conversation belongs to the user and project
     const conversation = await prisma.conversation.findFirst({
       where: {
