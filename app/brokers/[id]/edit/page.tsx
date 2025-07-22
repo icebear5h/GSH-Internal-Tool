@@ -6,7 +6,7 @@ import BrokerForm from "@/components/brokers/broker-form"
 import { BrokerType } from "@/types/file-system"
 
 
-export default async function EditBrokerPage({ params }: { params: { id: string } }) {
+export default async function EditBrokerPage({ params }: { params: Promise<{ id: string }> }) {
   const broker = await fetch(`${process.env.INTERNAL_URL}/api/brokers/${(await params).id}`).then(res => res.json()) 
 
   if (!broker) {
