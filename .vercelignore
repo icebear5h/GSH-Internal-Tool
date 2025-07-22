@@ -1,0 +1,6 @@
+# .vercelignore
+**/*.pyc
+__pycache__/
+prisma/migrations/
+tests/
+docs/
