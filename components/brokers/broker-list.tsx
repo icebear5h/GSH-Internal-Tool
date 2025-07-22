@@ -44,29 +44,39 @@ export default function BrokerList({ sortBy = 'name', sortOrder = 'asc' }: Broke
   const { toast } = useToast()
 
   const fetchBrokers = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const params = new URLSearchParams()
-      if (searchQuery) params.append("query", searchQuery)
-      if (typeFilter !== "all") params.append("type", typeFilter)
-      params.append("sortBy", sortByState)
-      params.append("sortOrder", sortOrderState)
-
-      const res = await fetch(`/api/brokers?${params.toString()}`)
-      if (!res.ok) throw new Error("Failed to fetch brokers")
-      const data = await res.json()
-      setBrokers(data.brokers || [])
-    } catch (error) {
-      console.error("Error fetching brokers:", error)
+      const params = new URLSearchParams();
+      if (searchQuery)     params.append("query", searchQuery);
+      if (typeFilter!=="all") params.append("type", typeFilter);
+      params.append("sortBy", sortByState);
+      params.append("sortOrder", sortOrderState);
+  
+      const res = await fetch(`/api/brokers?${params}`);
+      if (!res.ok) throw new Error("Failed to fetch brokers");
+  
+      const payload = await res.json();
+      // if your API returns an array: data = [{…},…]
+      // if it returns { brokers: […], meta: {…} } then adjust below
+      const list = Array.isArray(payload)
+        ? payload
+        : payload.brokers || [];
+  
+      setBrokers(list);
+  
+      // for debugging, you can also:
+      console.log("fetched brokers:", list);
+    } catch (err) {
+      console.error(err);
       toast({
         title: "Error",
         description: "Failed to load brokers. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [searchQuery, typeFilter, sortByState, sortOrderState, toast])
+  }, [searchQuery, typeFilter, sortByState, sortOrderState, toast]);
 
   useEffect(() => {
     fetchBrokers()
