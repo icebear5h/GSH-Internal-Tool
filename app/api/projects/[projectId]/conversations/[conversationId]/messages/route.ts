@@ -1,7 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import dotenv from "dotenv"
 import crypto from "crypto"
+
+dotenv.config()
 
 const DEV_TOKEN  = "dev-token";   // must match your get_token_header
 const USER_TOKEN = "user-token";
@@ -80,7 +83,7 @@ export async function POST(
 
     const res = await fetch(
       // add the ?token= query-param for verify_user
-      `http://localhost:8000/chat/message?token=${USER_TOKEN}`,
+      `${process.env.INTERNAL_API_URL}/chat/message?token=${USER_TOKEN}`,
       {
         method: "POST",
         headers: {

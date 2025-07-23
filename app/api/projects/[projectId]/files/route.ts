@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { prisma } from "@/lib/prisma"
 import crypto from "crypto"
+import dotenv from "dotenv"
+dotenv.config()
 
 const DEV_TOKEN  = "dev-token";   // must match your get_token_header
 const USER_TOKEN = "user-token";
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
         projectId, // NEW: Link document directly to the project
       },
     })
-    await fetch(`http://localhost:8000/embedding/embed-file?token=${USER_TOKEN}`, {
+    await fetch(`${process.env.INTERNAL_API_URL}/embedding/embed-file?token=${USER_TOKEN}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

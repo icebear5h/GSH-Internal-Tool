@@ -326,7 +326,7 @@ export function ProjectChat({ projectId }: ProjectChatProps) {
             <div className="space-y-4">
               {messages.map((message) => (
                 <ChatMessage
-                  key={message.id}
+                  key={message.id + crypto.randomUUID()}
                   message={message.content}
                   isUser={message.role === "user"}
                   timestamp={message.createdAt}
