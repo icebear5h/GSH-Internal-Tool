@@ -1,7 +1,12 @@
 {
+  "builds": [
+    {
+      "src": "rag-sys/app/main.py",
+      "use": "@vercel/python"
+    }
+  ],
   "version": 2,
   "routes": [
     { "src": "/(.*)", "dest": "rag-sys/app/main.py" }
   ]
-  
 }
