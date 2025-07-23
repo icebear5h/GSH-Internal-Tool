@@ -1,12 +1,18 @@
 {
-  "builds": [
-    {
-      "src": "rag-sys/app/main.py",
-      "use": "@vercel/python"
-    }
-  ],
   "version": 2,
+  "builds": [
+    { "src": "next.config.js",            "use": "@vercel/next" },
+    { "src": "rag-sys/app/chat.py",        "use": "@vercel/python" },
+    { "src": "rag-sys/app/embed.py",       "use": "@vercel/python" }
+  ],
   "routes": [
-    { "src": "/(.*)", "dest": "rag-sys/app/main.py" }
-  ]
+    { "src": "/api/chat/(.*)",             "dest": "rag-sys/app/chat.py" },
+    { "src": "/api/embed/(.*)",            "dest": "rag-sys/app/embed.py" },
+    { "src": "/(.*)",                      "dest": "/" }
+  ],
+  "installCommand":    "npm install && pip install -r requirements.txt",
+  "buildCommand":      "npm run build",
+  "devCommand":        "vercel dev",
+  "framework":         "nextjs",
+  "outputDirectory":   ".next"
 }
