@@ -13,6 +13,14 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(dependencies=[Depends(verify_user)])
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Add the exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -38,4 +46,3 @@ async def shutdown():
 async def root():
     return {'message': 'RAG FastAPI running'}
 
-    
