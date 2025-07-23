@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
       },
     })
 
-    fetch(`http://localhost:8000/embed-task`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/embedding/embed-task`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
