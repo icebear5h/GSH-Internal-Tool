@@ -9,5 +9,21 @@
     { "src": "/api/embedding$", "dest": "/python_api/main.py" },
     { "src": "/api/(.*)",       "dest": "/app/api/$1" },
     { "src": "/(.*)",           "dest": "/" }
+  ],
+  "excludeFiles": [
+    "**/*.pyc",
+    "**/__pycache__/**",
+    ".env",
+    ".git/**",
+    ".venv/**",
+    "automations/**",
+    "docs/**",
+    "logdir/**",
+    "tests/**",
+    "prisma/migrations/**",
+    "Dockerfile",
+    "README.md",
+    "pytest.ini",
+    "package.json"
   ]
 }
