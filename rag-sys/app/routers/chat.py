@@ -7,10 +7,13 @@ from app.routing.query_router import routed_rag_context
 from app.routing.groq_client import groq_client
 from app.prompts.agent_prompt import AGENT_PROMPT
 from app.tools.messages import update_messages
-
+import os
 import json
+import nomic
 from nomic import embed
 from dotenv import load_dotenv
+
+nomic.login(os.getenv("NOMIC_API_KEY"))
 
 router = APIRouter(
     prefix='/chat',

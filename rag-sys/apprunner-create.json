@@ -1,0 +1,23 @@
+{
+  "ServiceArn": "arn:aws:apprunner:us-east-2:048230643918:service/gsh-fastapi-service/9e0d18538ce243ea89425f8767f39c4c",
+  "SourceConfiguration": {
+    "ImageRepository": {
+      "ImageIdentifier": "048230643918.dkr.ecr.us-east-2.amazonaws.com/gsh-fastapi-backend:latest",
+      "ImageRepositoryType": "ECR",
+      "ImageConfiguration": {
+        "Port": "80",
+        "RuntimeEnvironmentVariables": {
+          "SUPABASE_URL": "https://ckjpsadeikrgopmnjuvn.supabase.co",
+          "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNranBzYWRlaWtyZ29wbW5qdXZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDA4NzQ2NCwiZXhwIjoyMDY1NjYzNDY0fQ.JhrXn6wZGjUqqT8qJVUa_-JV03ks8pFm1OsvrqUlrIE",
+          "DATABASE_URL": "postgresql://postgres.ckjpsadeikrgopmnjuvn:xTUsv2N41QfuxESk@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true&sslmode=require",
+          "DIRECT_URL": "postgresql://postgres.ckjpsadeikrgopmnjuvn:xTUsv2N41QfuxESk@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslmode=require",
+          "GROQ_API_KEY": "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"
+        }
+      }
+    },
+    "AuthenticationConfiguration": {
+      "AccessRoleArn": "arn:aws:iam::048230643918:role/AppRunnerECRPullRole"
+    },
+    "AutoDeploymentsEnabled": true
+  }
+}

@@ -80,9 +80,10 @@ export async function POST(
         content,
       },
     })
-
+    console.log('INTERNAL_API_URL is:', process.env.INTERNAL_API_URL);
     const res = await fetch(
       // add the ?token= query-param for verify_user
+      
       `${process.env.INTERNAL_API_URL}/chat/message?token=${USER_TOKEN}`,
       {
         method: "POST",

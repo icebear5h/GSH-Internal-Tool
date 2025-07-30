@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import logging
 import traceback
 from app.dependencies import verify_user
@@ -7,9 +8,11 @@ from app.routers.chat import router as chat_router
 from app.routers.embedding import router as embedding_router
 from app.database import db
 
+
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 
 app = FastAPI(dependencies=[Depends(verify_user)])
 
@@ -41,6 +44,13 @@ async def startup():
 @app.on_event("shutdown") 
 async def shutdown():
     await db.disconnect()
+    
+@app.get("/health", tags=["internal"])
+async def health_check():
+    """
+    Simple health check endpoint for App Runner.
+    """
+    return {"status": "ok"}
 
 @app.get('/')
 async def root():

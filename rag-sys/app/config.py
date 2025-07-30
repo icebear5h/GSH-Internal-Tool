@@ -8,8 +8,8 @@ import logging
 load_dotenv(Path(__file__).with_suffix('.env'))   # loads your .env
 
 settings = SimpleNamespace(
-    SUPABASE_URL         = os.getenv("SUPABASE_URL"),
-    SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY"),
+    SUPABASE_URL         = os.getenv("NEXT_PUBLIC_SUPABASE_URL"),
+    SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY"),
     GROQ_API_KEY         = os.getenv("GROQ_API_KEY"),
     DATABASE_URL         = os.getenv("DATABASE_URL"),
 )

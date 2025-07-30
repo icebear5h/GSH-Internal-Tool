@@ -10,13 +10,16 @@ from pydantic import BaseModel
 from app.dependencies import get_token_header
 from app.config import settings
 from app.embedding.extractor import extract_chunks
-from nomic import embed
+import nomic
 import uuid
 import logging
 from app.database import supabase, db
+import os
+from nomic import embed
 
 logger = logging.getLogger(__name__)
 
+nomic.login(os.getenv("NOMIC_API_KEY"))
 
 router = APIRouter(
     prefix="/embedding",
